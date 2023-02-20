@@ -51,7 +51,7 @@ class CUDAPlacementPolicy(PlacementPolicy):
     def __init__(self,
                  chunk_manager: ChunkManager,
                  mem_stats_collector: Optional[ChunkMemStatsCollector] = None) -> None:
-        assert torch.cuda.is_available(), 'Cannot use CUDATensorPlacementPolicy when CUDA is not available'
+        # assert torch.cuda.is_available(), 'Cannot use CUDATensorPlacementPolicy when CUDA is not available'
         super().__init__(chunk_manager, mem_stats_collector=mem_stats_collector)
 
     def evict_tensors(self, can_evict_chunks: List[Chunk], **kwargs) -> Tuple[int, float]:

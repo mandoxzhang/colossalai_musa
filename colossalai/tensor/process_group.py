@@ -97,13 +97,15 @@ class ProcessGroup:
 
         for i in range(self._dp_degree):
             i_tp_list = [self._rank_list[i * self._tp_degree + j] for j in range(self._tp_degree)]
-            PYTORCHPGDICT_.get(i_tp_list, 'nccl')
+            # PYTORCHPGDICT_.get(i_tp_list, 'nccl')
+            PYTORCHPGDICT_.get(i_tp_list, 'gloo')
             if self._rank in i_tp_list:
                 self._tp_rank_list = i_tp_list
 
         for j in range(self._tp_degree):
             j_dp_list = [self._rank_list[i * self._tp_degree + j] for i in range(self._dp_degree)]
-            PYTORCHPGDICT_.get(j_dp_list, 'nccl')
+            # PYTORCHPGDICT_.get(j_dp_list, 'nccl')
+            PYTORCHPGDICT_.get(j_dp_list, 'gloo')
             if self._rank in j_dp_list:
                 self._dp_rank_list = j_dp_list
 
@@ -260,7 +262,8 @@ class ProcessGroup:
         Returns:
             `torch._C._distributed_c10d.ProcessGroup`: the pytorch DP process group.
         """
-        return PYTORCHPGDICT_.get(self._dp_rank_list, 'nccl')
+        return PYTORCHPGDICT_.get(self._dp_rank_list, 'gloo')
+        # return PYTORCHPGDICT_.get(self._dp_rank_list, 'nccl')
 
     def tp_process_group(self):
         """tp_process_group

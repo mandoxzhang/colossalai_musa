@@ -35,12 +35,12 @@ class DynamicGradScaler(BaseGradScaler):
                  verbose: bool = False):
         super().__init__(initial_scale, verbose)
         if min_scale:
-            self._min_scale = torch.cuda.FloatTensor([min_scale])
+            self._min_scale = torch.FloatTensor([min_scale]).to(torch.device('mtgpu'))
         else:
             self._min_scale = None
 
         if max_scale:
-            self._max_scale = torch.cuda.FloatTensor([max_scale])
+            self._max_scale = torch.FloatTensor([max_scale]).to(torch.device('mtgpu'))
         else:
             self._max_scale = None
 

@@ -33,6 +33,7 @@ def free_storage(data: torch.Tensor) -> None:
     if data.storage().size() > 0:
         # Since we're modifying the Tensor's Storage directly, make sure the Tensor
         # is the sole occupant of the Storage.
+        data = data.to(torch.device('cpu'))
         assert data.storage_offset() == 0
         data.storage().resize_(0)
 
@@ -74,7 +75,7 @@ class ColoDDP(torch.nn.Module):
         assert not isinstance(module, ColoDDP)
         super().__init__()
         self.module = module
-        self.comm_stream: torch.cuda.Stream = torch.cuda.Stream()
+        # self.comm_stream: torch.cuda.Stream = torch.cuda.Stream()
         assert process_group
 
         self.process_group = process_group
@@ -112,9 +113,9 @@ class ColoDDP(torch.nn.Module):
 
     def backward(self, loss: torch.Tensor):
         loss.backward()
-        with torch.cuda.stream(self.comm_stream):
-            self.reducer.flush()
-        torch.cuda.current_stream().wait_stream(self.comm_stream)
+        # with torch.cuda.stream(self.comm_stream):
+        self.reducer.flush()
+        # torch.cuda.current_stream().wait_stream(self.comm_stream)
         if self.rebuild_bucket:
             self.reducer.free()
         for p in self.module.parameters():
@@ -652,10 +653,10 @@ class ZeroDDP(ColoDDP):
                 continue
 
             # create a fp32 parameter
-            fp32_data = p.data.float()
+            fp32_data = p.data.float().clone().detach()
             fp32_p = ColoTensor(fp32_data, spec=ColoTensorSpec(p.process_group))
             # create a fp16 parameter
-            p.data = p.data.half()
+            # p.data = p.data.half()
 
             # register the fp16 parameter and fp32 parameter in the chunk manager
             dp_world_size = p.process_group.dp_world_size()
@@ -687,6 +688,7 @@ class ZeroDDP(ColoDDP):
 
     def _cast_buffers(self):
         for buffer in self.module.buffers():
-            buffer.data = buffer.cuda()
-            if torch.is_floating_point(buffer):
-                buffer.data = buffer.half()
+            buffer = buffer.to(torch.device('mtgpu'))
+            # buffer.data = buffer.cuda()
+            # if torch.is_floating_point(buffer):
+            #     buffer.data = buffer.half()

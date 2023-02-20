@@ -146,7 +146,9 @@ class ZeroOptimizer(ColossalaiOptimizer):
         self._found_overflow.fill_(self.module.overflow_counter)
 
         # all-reduce across global group
+        self._found_overflow = self._found_overflow.to(torch.device('cpu'))
         dist.all_reduce(self._found_overflow)
+        self._found_overflow = self._found_overflow.to(torch.device('mtgpu'))
 
         return self._found_overflow.item() > 0
 

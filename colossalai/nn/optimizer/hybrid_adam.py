@@ -2,7 +2,7 @@ from typing import Any, Optional
 
 import torch
 
-from colossalai.kernel.op_builder import CPUAdamBuilder, FusedOptimBuilder
+from colossalai.kernel.op_builder import CPUAdamBuilder, FusedOptimBuilder, MusaCPUAdamBuilder
 from colossalai.registry import OPTIMIZERS
 from colossalai.utils import multi_tensor_applier
 
@@ -79,12 +79,12 @@ class HybridAdam(NVMeOptimizer):
         self.adamw_mode = adamw_mode
 
         # build during runtime if not found
-        cpu_optim = CPUAdamBuilder().load()
-        fused_optim = FusedOptimBuilder().load()
+        cpu_optim = MusaCPUAdamBuilder().load()
+        # fused_optim = FusedOptimBuilder().load()
         self.cpu_adam_op = cpu_optim.CPUAdamOptimizer(lr, betas[0], betas[1], eps, weight_decay, adamw_mode)
 
-        self.gpu_adam_op = fused_optim.multi_tensor_adam
-        self._dummy_overflow_buf = torch.cuda.IntTensor([0])
+        # self.gpu_adam_op = fused_optim.multi_tensor_adam
+        self._dummy_overflow_buf = torch.IntTensor([0]).to(torch.device('mtgpu'))
 
     @torch.no_grad()
     def step(self, closure=None, div_scale: float = -1):

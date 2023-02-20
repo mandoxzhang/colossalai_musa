@@ -182,3 +182,16 @@ class Builder(ABC):
                                  'cxx': self.strip_empty_entries(self.cxx_flags()),
                                  'nvcc': self.strip_empty_entries(self.nvcc_flags())
                              })
+
+    def cpp_builder(self) -> 'CPPExtension':
+        """
+        get a CUDAExtension instance used for setup.py
+        """
+        from torch.utils.cpp_extension import CppExtension
+
+        return CppExtension(name=self.prebuilt_import_path,
+                             sources=self.strip_empty_entries(self.sources_files()),
+                             include_dirs=self.strip_empty_entries(self.include_dirs()),
+                             extra_compile_args={
+                                 'cxx': self.strip_empty_entries(self.cxx_flags())
+                             })

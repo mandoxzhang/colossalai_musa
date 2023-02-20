@@ -156,6 +156,13 @@ if build_cuda_ext:
         print(f'===== Building Extension {name} =====')
         ext_modules.append(builder_cls().builder())
 
+if int(os.environ.get('MUSA_CPU', '0')) == 1:
+    from op_builder import ALL_OPS
+    for name, builder_cls in ALL_OPS.items():
+        if name == 'musa_cpu_adam':
+            print(f'===== Building Extension {name} =====')
+            ext_modules.append(builder_cls().cpp_builder())
+
 # always put not nightly branch as the if branch
 # otherwise github will treat colossalai-nightly as the project name
 # and it will mess up with the dependency graph insights
