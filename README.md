@@ -5,7 +5,7 @@
 Download From Source
 
 ```shell
-git clone 
+git clone -b feature/musa https://github.com/mandoxzhang/ColossalAI.git
 cd ColossalAI
 
 # install colossalai
