@@ -5,7 +5,7 @@ from .moe import MOEBuilder
 from .multi_head_attn import MultiHeadAttnBuilder
 from .scaled_masked_softmax import ScaledMaskedSoftmaxBuilder
 from .scaled_upper_triangle_masked_softmax import ScaledUpperTrainglemaskedSoftmaxBuilder
-from . musa_cpu_adam import MusaCPUAdamBuilder
+from .musa_cpu_adam import MusaCPUAdamBuilder
 
 ALL_OPS = {
     'cpu_adam': CPUAdamBuilder,
