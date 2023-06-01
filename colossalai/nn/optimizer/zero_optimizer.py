@@ -105,7 +105,7 @@ class ZeroOptimizer(ColossalaiOptimizer):
                                              growth_interval=growth_interval,
                                              hysteresis=hysteresis,
                                              max_scale=max_scale)
-        self._found_overflow: torch.Tensor = torch.zeros(1, dtype=torch.int64, device=get_current_device())
+        self._found_overflow: torch.Tensor = torch.zeros(1, dtype=torch.int32, device=get_current_device())
         self._logger = get_dist_logger()
 
         self.gpu_margin_mem_ratio: float = float(gpu_margin_mem_ratio)
@@ -146,9 +146,9 @@ class ZeroOptimizer(ColossalaiOptimizer):
         self._found_overflow.fill_(self.module.overflow_counter)
 
         # all-reduce across global group
-        self._found_overflow = self._found_overflow.to(torch.device('cpu'))
+        # self._found_overflow = self._found_overflow.to(torch.device('cpu'))
         dist.all_reduce(self._found_overflow)
-        self._found_overflow = self._found_overflow.to(torch.device('mtgpu'))
+        # self._found_overflow = self._found_overflow.to(torch.device('musa'))
 
         return self._found_overflow.item() > 0
 

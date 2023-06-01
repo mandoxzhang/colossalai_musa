@@ -22,7 +22,7 @@ class BaseGradScaler(ABC):
 
     def __init__(self, initial_scale: float, verbose: bool):
         assert initial_scale > 0
-        self._scale = torch.FloatTensor([initial_scale]).to(torch.device('mtgpu'))
+        self._scale = torch.FloatTensor([initial_scale]).to(torch.device('musa'))
         self._verbose = verbose
 
         if self._verbose:

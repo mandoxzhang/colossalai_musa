@@ -33,7 +33,7 @@ def free_storage(data: torch.Tensor) -> None:
     if data.storage().size() > 0:
         # Since we're modifying the Tensor's Storage directly, make sure the Tensor
         # is the sole occupant of the Storage.
-        data = data.to(torch.device('cpu'))
+        # data = data.to(torch.device('cpu'))
         assert data.storage_offset() == 0
         data.storage().resize_(0)
 
@@ -688,7 +688,7 @@ class ZeroDDP(ColoDDP):
 
     def _cast_buffers(self):
         for buffer in self.module.buffers():
-            buffer = buffer.to(torch.device('mtgpu'))
+            buffer = buffer.to(torch.device('musa'))
             # buffer.data = buffer.cuda()
             # if torch.is_floating_point(buffer):
             #     buffer.data = buffer.half()

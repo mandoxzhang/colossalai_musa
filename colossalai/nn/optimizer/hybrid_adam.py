@@ -84,7 +84,7 @@ class HybridAdam(NVMeOptimizer):
         self.cpu_adam_op = cpu_optim.CPUAdamOptimizer(lr, betas[0], betas[1], eps, weight_decay, adamw_mode)
 
         # self.gpu_adam_op = fused_optim.multi_tensor_adam
-        self._dummy_overflow_buf = torch.IntTensor([0]).to(torch.device('mtgpu'))
+        self._dummy_overflow_buf = torch.IntTensor([0]).to(torch.device('musa'))
 
     @torch.no_grad()
     def step(self, closure=None, div_scale: float = -1):

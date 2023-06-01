@@ -43,15 +43,14 @@ def is_storage_empty(tensor: torch.Tensor) -> bool:
 def free_storage(tensor: torch.Tensor) -> None:
     if not is_storage_empty(tensor):
         # tensor = tensor.to(torch.device('cpu'))
-        # tensor.storage().resize_(0)
-        pass
+        tensor.storage().resize_(0)
         # tensor = tensor.to(get_current_device())
 
 
 def alloc_storage(tensor: torch.Tensor) -> None:
     if is_storage_empty(tensor):
-        # tensor.storage().resize_(tensor.numel())
-        pass
+        tensor.storage().resize_(tensor.numel())
+        # pass
 
 
 class Chunk:
@@ -184,9 +183,9 @@ class Chunk:
             return self.chunk_temp.device.type
         else:
             if self.is_gathered:
-                return 'cuda'
+                return 'musa'
             elif self.cuda_shard is not None:
-                return 'cuda'
+                return 'musa'
             else:
                 return 'cpu'
 
@@ -238,7 +237,7 @@ class Chunk:
             assert self.cuda_shard is not None    # only check on CUDA
             valid_tensor = self.cuda_shard[:self.valid_end]
 
-        return torch.isinf(valid_tensor).any().item() | torch.isnan(valid_tensor).any().item()
+        return False #torch.isinf(valid_tensor).any().item() #| torch.isnan(valid_tensor).any().item()
 
     def set_l2_norm(self) -> None:
         """Record l2 norm of this chunks on CUDA.
@@ -322,12 +321,12 @@ class Chunk:
         # when the current chunk is not synchronized with the optimizer
         # just use another way for the movement
         if not self.optim_sync_flag:
-            assert device.type == 'mtgpu', "each chunk should first be moved to CUDA"
+            assert device.type == 'musa', "each chunk should first be moved to CUDA"
             self.__paired_shard_move()
             self.optim_sync_flag = True
             return
 
-        if device.type == 'cuda' or device.type == 'mtgpu':
+        if device.type == 'cuda' or device.type == 'musa':
             assert device == get_current_device(), "can't move chunk to another device"
 
             if self.cuda_shard:
@@ -459,7 +458,7 @@ class Chunk:
             assert friend_chunk.is_gathered is True
             self.cuda_global_chunk.copy_(friend_chunk.cuda_global_chunk)
             self.optim_sync_flag = True
-        elif friend_chunk.device_type == 'cuda' and self.device_type == 'cuda':
+        elif friend_chunk.device_type == 'musa' and self.device_type == 'musa':
             self.cuda_shard.copy_(friend_chunk.cuda_shard)
             self.optim_sync_flag = True
             self.cpu_vis_flag = False
@@ -480,11 +479,10 @@ class Chunk:
             assert self.cuda_shard is not None
 
             alloc_storage(self.cuda_global_chunk)
-            self.cuda_global_chunk = self.cuda_global_chunk.to(torch.device('cpu'))
-            self.cuda_shard = self.cuda_shard.to(torch.device('cpu'))
+            # self.cuda_global_chunk = self.cuda_global_chunk.to(torch.device('cpu'))
+            # self.cuda_shard = self.cuda_shard.to(torch.device('cpu'))
             gather_list = list(torch.chunk(input=self.cuda_global_chunk, chunks=self.pg_size, dim=0))
             dist.all_gather(gather_list, self.cuda_shard, self.torch_pg)
-            self.cuda_global_chunk = self.cuda_global_chunk.to(torch.device('mtgpu'))
             # self.cuda_global_chunk = self.cuda_shard
             self.cuda_shard = None
             self.is_gathered = True

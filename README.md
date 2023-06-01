@@ -17,7 +17,7 @@ MUSA_CPU=1 pip install .
 ```python
 import os
 os.environ["PVR_GPUIDX"] = str(4)
-os.environ["MTGPU_MAX_MEM_USAGE_GB"] = "14"
+os.environ["musa_MAX_MEM_USAGE_GB"] = "14"
 try:
     import musa_torch_extension
 except ImportError:

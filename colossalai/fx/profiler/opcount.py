@@ -247,7 +247,7 @@ if version.parse(torch.__version__) >= version.parse('1.12.0'):
         aten.embedding_dense_backward.default: elementwise_flop_counter(0, 1),
         aten.embedding.default: elementwise_flop_counter(1, 0),
         aten.upsample_nearest2d.vec: elementwise_flop_counter(0, 1),
-        aten.upsample_nearest2d_backward.vec: elementwise_flop_counter(0, 1),
+        # aten.upsample_nearest2d_backward.vec: elementwise_flop_counter(0, 1),
     }
 
     elementwise_flop_aten = [

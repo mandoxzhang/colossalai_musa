@@ -116,7 +116,7 @@ class GeminiManager:
         start = time()
         cuda_demand = 0
         for chunk in chunks:
-            if chunk.device_type == 'cuda':
+            if chunk.device_type == 'musa':
                 if chunk.is_gathered:
                     pass
                 else:
