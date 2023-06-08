@@ -387,12 +387,21 @@ class Chunk:
             dist.all_reduce(self.cuda_global_chunk, group=self.torch_pg)
         else:
             self.cuda_shard = torch.empty(self.shard_size, dtype=self.dtype, device=get_current_device())
-
-            input_list = list(torch.chunk(self.cuda_global_chunk, chunks=self.pg_size, dim=0))
-            dist.reduce_scatter(self.cuda_shard, input_list, group=self.torch_pg)
-
+            # self.cuda_shard = self.cuda_shard.to('cpu')
+            # self.cuda_global_chunk = self.cuda_global_chunk.to('cpu')
+            cpu_global_chunk = torch.zeros_like(self.cuda_global_chunk, device=torch.device('cpu'))
+            cpu_global_chunk.copy_(self.cuda_global_chunk)
+            # input_list = list(torch.chunk(self.cuda_global_chunk, chunks=self.pg_size, dim=0))
+            # dist.all_reduce(self.cuda_global_chunk, group=self.torch_pg)
+            dist.all_reduce(cpu_global_chunk, group=self.torch_pg)
+            # dist.reduce_scatter(self.cuda_shard, input_list, group=self.torch_pg)
+            # self.cuda_shard.to('musa')
+            # self.cuda_global_chunk = self.cuda_global_chunk.to('musa')
+            self.cuda_global_chunk.copy_(cpu_global_chunk)
+            self.cuda_shard.copy_(self.cuda_global_chunk[self.shard_begin:self.shard_end])
             free_storage(self.cuda_global_chunk)
             self.is_gathered = False
+
         self.__update_tensors_state(TensorState.HOLD)
 
     def tensor_trans_state(self, tensor: torch.Tensor, tensor_state: TensorState) -> None:
@@ -480,9 +489,13 @@ class Chunk:
 
             alloc_storage(self.cuda_global_chunk)
             # self.cuda_global_chunk = self.cuda_global_chunk.to(torch.device('cpu'))
-            # self.cuda_shard = self.cuda_shard.to(torch.device('cpu'))
-            gather_list = list(torch.chunk(input=self.cuda_global_chunk, chunks=self.pg_size, dim=0))
+            self.cuda_shard = self.cuda_shard.to(torch.device('cpu'))
+            cpu_global_chunk = torch.zeros_like(self.cuda_global_chunk, device=torch.device('cpu'))
+            # gather_list = list(torch.chunk(input=self.cuda_global_chunk, chunks=self.pg_size, dim=0))
+            gather_list = list(torch.chunk(input=cpu_global_chunk, chunks=self.pg_size, dim=0))
             dist.all_gather(gather_list, self.cuda_shard, self.torch_pg)
+            self.cuda_global_chunk.copy_(cpu_global_chunk)
+            # self.cuda_global_chunk = self.cuda_global_chunk.to(torch.device('musa'))
             # self.cuda_global_chunk = self.cuda_shard
             self.cuda_shard = None
             self.is_gathered = True
